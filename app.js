@@ -1,10 +1,16 @@
 var https = require('https');
+var http = require('http');
 
 var username = 'sergeipanfilov';
 
+//print out messages
 function printMessage(username, badgeCount, count) {
   var message = username + ' has ' + badgeCount + ' total badges and ' + count + ' points in Javascript';
   console.log(message);
+}
+
+function printError(error) {
+  console.error(error.message);
 }
 
 var request = https.get('https://teamtreehouse.com/'+ username +'.json', function(response) {
@@ -15,8 +21,21 @@ var request = https.get('https://teamtreehouse.com/'+ username +'.json', functio
   });
 
   response.on('end', function() {
-    var profile = JSON.parse(body);
-    printMessage(username, profile.badges.length, profile.points.JavaScript);
+    if(response.statusCode == 200) {
+      try {
+        var profile = JSON.parse(body);
+        printMessage(username, profile.badges.length, profile.points.JavaScript);
+      } catch(error) {
+        //parse error
+        printError(error);
+      }
+    } else {
+      //statusCode error
+      printError({message: ' There was an error getting profile for ' + username + '. (' + http.STATUS_CODES[response.statusCode] + ') - ' + response.statusCode});
+    }
   })
 
 });
+
+
+request.on('error', printError);
